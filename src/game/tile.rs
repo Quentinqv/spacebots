@@ -1,5 +1,3 @@
-// Tile interface for the map
-
 #[derive(Debug, Clone, Copy)]
 pub struct Tile {
     pub tile_type: TileType,
