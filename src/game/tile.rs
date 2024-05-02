@@ -1,3 +1,4 @@
+use std::time::{SystemTime, UNIX_EPOCH};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -7,6 +8,7 @@ pub struct Tile {
     pub traversable: bool,
     pub is_discovered: bool,
     pub color: (f32, f32, f32),
+    pub last_time_visited: u128,
 }
 
 impl Tile {
@@ -17,6 +19,7 @@ impl Tile {
             traversable,
             is_discovered,
             color: (0.0, 0.0, 0.0),
+            last_time_visited: 0,
         }
     }
 
@@ -42,6 +45,12 @@ impl Tile {
         self.tile_type = tile_type;
         self.update_traversable();
         self.update_color();
+    }
+
+    pub fn visit(&mut self) {
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+        self.last_time_visited = timestamp;
+        self.is_discovered = true;
     }
 }
 
