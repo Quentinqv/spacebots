@@ -2,8 +2,10 @@ use rand;
 use rand::{random, Rng, SeedableRng};
 
 use rand::rngs::StdRng;
+use serde::{Deserialize, Serialize};
 use crate::game::tile::{Tile, TileType};
 
+#[derive(Serialize, Deserialize)]
 pub struct Map {
     pub tiles: Vec<Vec<Tile>>,
     pub width: i32,

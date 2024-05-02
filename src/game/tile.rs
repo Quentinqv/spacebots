@@ -1,4 +1,6 @@
-#[derive(Debug, Clone, Copy)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Tile {
     pub tile_type: TileType,
     pub position: (i32, i32),
@@ -43,7 +45,7 @@ impl Tile {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum TileType {
     Empty,
     Rock,
