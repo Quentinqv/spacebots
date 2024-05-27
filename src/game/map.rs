@@ -3,13 +3,15 @@ use rand::{random, Rng, SeedableRng};
 
 use rand::rngs::StdRng;
 use serde::{Deserialize, Serialize};
+use crate::game::robot::Robot;
 use crate::game::tile::{Tile, TileType};
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Map {
     pub tiles: Vec<Vec<Tile>>,
     pub width: i32,
     pub height: i32,
+    pub robots: Vec<Robot>,
 }
 
 impl Map {
@@ -40,6 +42,7 @@ impl Map {
             tiles,
             width,
             height,
+            robots: vec![],
         }
     }
 
@@ -63,24 +66,66 @@ impl Map {
     }
 
     pub fn display(&self) {
-        // clear the screen
+        // Clear the screen
         print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
 
         for y in 0..self.height {
             for x in 0..self.width {
-                let tile = &self.tiles[x as usize][y as usize];
-                let character = if tile.is_discovered {
-                    match tile.tile_type {
-                        TileType::Empty => ' ',
-                        TileType::Rock => 'R',
-                        TileType::Energy => 'E',
-                        TileType::ScientificStation => 'S',
+                let mut robot = false;
+                for r in &self.robots {
+                    if r.x == x as usize && r.y == y as usize {
+                        robot = true;
                     }
+                }
+                if robot {
+                    print!("X");
                 } else {
-                    // Tile is not discovered
-                    '-'
-                };
-                print!("{}", character);
+                    match self.tiles[x as usize][y as usize].tile_type {
+                        TileType::Empty => print!(" "),
+                        TileType::Rock => print!("#"),
+                        TileType::Energy => print!("*"),
+                        TileType::ScientificStation => print!("S"),
+                    }
+                }
+            }
+            println!();
+        }
+    }
+
+    pub fn add_robot(&mut self, robot: Robot) {
+        self.robots.push(robot);
+    }
+
+    // Display the map with the robot's vision
+    pub fn display_with_vision(&self) {
+        // Clear the screen
+        print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let mut robot = false;
+                for r in &self.robots {
+                    if r.x == x as usize && r.y == y as usize {
+                        robot = true;
+                    }
+                }
+                if robot {
+                    print!("X");
+                } else {
+                    // if tile.is_discovered, print the tile
+                    // else print a space
+                    // println!("{}", self.tiles[x as usize][y as usize].is_discovered.to_string());
+                    if self.tiles[x as usize][y as usize].is_discovered {
+                        match self.tiles[x as usize][y as usize].tile_type {
+                            TileType::Empty => print!(" "),
+                            TileType::Rock => print!("#"),
+                            TileType::Energy => print!("*"),
+                            TileType::ScientificStation => print!("S"),
+                        }
+                    } else {
+                        print!("-");
+                    }
+                }
             }
             println!();
         }
