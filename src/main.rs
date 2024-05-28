@@ -1,18 +1,102 @@
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
+use rand::Rng;
+use crate::game::map::Map;
+use crate::game::robot::Robot;
+
+mod game {
+    pub mod map;
+    pub mod robot;
+    pub mod tile;
+}
+
+fn display_map(map: &Map, robots: &[Robot]) {
+    let mut display = vec![vec![' '; map.width as usize]; map.height as usize];
+
+    for (x, row) in map.tiles.iter().enumerate() {
+        for (y, tile) in row.iter().enumerate() {
+            if tile.is_discovered {
+                let symbol = match tile.tile_type {
+                    game::tile::TileType::Empty => ' ',
+                    game::tile::TileType::Rock => '#',
+                    game::tile::TileType::Energy => 'E',
+                    game::tile::TileType::ScientificStation => 'S',
+                };
+                display[y][x] = symbol;
+            } else {
+                display[y][x] = '-';
+            }
+        }
+    }
+
+    for robot in robots {
+        display[robot.y][robot.x] = 'R';
+    }
+
+    for row in display {
+        for cell in row {
+            print!("{} ", cell);
+        }
+        println!();
+    }
+    println!();
+}
+
+fn display_robot_stats(robots: &[Robot]) {
+    for robot in robots {
+        println!("Robot {}: Energy collected = {}",
+                 robot.id, robot.energy_collected);
+    }
+    println!();
+}
+
+fn launch_game(map: Arc<Mutex<Map>>, robots: &mut [Robot], steps: usize) {
+    for _ in 0..steps {
+        let mut rng = rand::thread_rng();
+
+        for robot in robots.iter_mut() {
+            let direction = rng.gen_range(0..4);
+
+            match direction {
+                0 => robot.move_up(),
+                1 => robot.move_down(),
+                2 => robot.move_left(),
+                3 => robot.move_right(),
+                _ => (),
+            }
+        }
+
+        {
+            let map = map.lock().unwrap();
+            display_map(&map, robots);
+        }
+
+        display_robot_stats(robots);
+
+        thread::sleep(Duration::from_millis(500));
+    }
+}
+
 fn main() {
-    println!("SpaceBots");
-    let mut map = spacebots::game::map::Map::new(10, 10, 0);
-    let mut map2 = spacebots::game::map::Map::new(10, 10, 0);
+    let width = 10;
+    let height = 10;
+    let seed = 42; // Fixed seed for reproducibility
 
-    map.discover(5, 5);
-    // wait for 1 second
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    map2.discover(5, 5);
+    let map = Arc::new(Mutex::new(Map::new(width, height, seed)));
+    let mut robots = vec![
+        Robot::new(1, 0, 0, Arc::clone(&map)),
+        Robot::new(2, 6, 6, Arc::clone(&map)),
+    ];
 
-    println!("{}", map.tiles[5][5].last_time_visited);
-    println!("{}", map2.tiles[5][5].last_time_visited);
+    {
+        let mut map = map.lock().unwrap();
+        for robot in &robots {
+            map.discover(robot.x as i32, robot.y as i32);
+        }
+        println!("Initial Map:");
+        display_map(&map, &robots);
+    }
 
-    let merged_map = map.merge(&map2);
-    merged_map.display();
-
-    println!("{}", merged_map.tiles[5][5].last_time_visited);
+    launch_game(Arc::clone(&map), &mut robots, 50);
 }
