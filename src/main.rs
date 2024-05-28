@@ -43,6 +43,14 @@ fn display_map(map: &Map, robots: &[Robot]) {
     println!();
 }
 
+fn display_robot_stats(robots: &[Robot]) {
+    for robot in robots {
+        println!("Robot {}: Energy collected = {}",
+                 robot.id, robot.energy_collected);
+    }
+    println!();
+}
+
 fn launch_game(map: Arc<Mutex<Map>>, robots: &mut [Robot], steps: usize) {
     for _ in 0..steps {
         let mut rng = rand::thread_rng();
@@ -64,7 +72,9 @@ fn launch_game(map: Arc<Mutex<Map>>, robots: &mut [Robot], steps: usize) {
             display_map(&map, robots);
         }
 
-        thread::sleep(Duration::from_secs(1));
+        display_robot_stats(robots);
+
+        thread::sleep(Duration::from_millis(500));
     }
 }
 
@@ -75,13 +85,12 @@ fn main() {
 
     let map = Arc::new(Mutex::new(Map::new(width, height, seed)));
     let mut robots = vec![
-        Robot::new(1, 2, 2, Arc::clone(&map)),
+        Robot::new(1, 0, 0, Arc::clone(&map)),
         Robot::new(2, 6, 6, Arc::clone(&map)),
     ];
 
     {
         let mut map = map.lock().unwrap();
-        // Discover map where robots are
         for robot in &robots {
             map.discover(robot.x as i32, robot.y as i32);
         }
@@ -89,6 +98,5 @@ fn main() {
         display_map(&map, &robots);
     }
 
-    // Launch the game for 20 steps
-    launch_game(Arc::clone(&map), &mut robots, 20);
+    launch_game(Arc::clone(&map), &mut robots, 50);
 }
