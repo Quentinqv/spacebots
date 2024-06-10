@@ -151,8 +151,9 @@ fn launch_game(map: Arc<Mutex<Map>>, robots: &mut [Robot], steps: usize) {
 fn main() {
     let width = 10;
     let height = 10;
+    let seed = 42; // Fixed seed for reproducibility
 
-    let map = Arc::new(Mutex::new(Map::new(width, height, 0)));
+    let map = Arc::new(Mutex::new(Map::new(width, height, seed)));
     let mut robots = vec![
         Robot::new(1, 0, 0, Arc::clone(&map)),
         Robot::new(2, 6, 6, Arc::clone(&map)),
